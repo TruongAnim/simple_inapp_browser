@@ -3,10 +3,14 @@ import 'package:flutter/services.dart';
 import 'package:get/get.dart';
 import 'package:simple_inap_browser/simple_browser/simple_browser_controller.dart';
 
+import 'components/browser_app_bar.dart';
+import 'components/browser_body.dart';
 import 'components/custom_image.dart';
+import 'components/footer.dart';
 import 'components/tab_viewer.dart';
 import 'components/util.dart';
 import 'components/webview_tab.dart';
+import 'core/color_resources.dart';
 import 'log_utils.dart';
 
 class SimpleBrowserPage extends StatefulWidget {
@@ -39,7 +43,7 @@ class _SimpleBrowserPageState extends State<SimpleBrowserPage> {
       _isRestored = true;
       controller.restore();
     }
-    precacheImage(const AssetImage("assets/icon/icon.png"), context);
+    // precacheImage(const AssetImage("assets/icon/icon.png"), context);
   }
 
   @override
@@ -91,44 +95,24 @@ class _SimpleBrowserPageState extends State<SimpleBrowserPage> {
               currentFocus.focusedChild!.unfocus();
             }
           },
-          child: Scaffold(
-            // appBar: const BrowserAppBar(),
-            body: _buildWebViewTabsContent(),
+          child: const Scaffold(
+            backgroundColor: ColorResources.browser_bg,
+            resizeToAvoidBottomInset: false,
+            body: SafeArea(
+              child: Column(
+                children: [
+                  BrowserAppBar(),
+                  Expanded(child: BrowserBody()),
+                  Footer(),
+                ],
+              ),
+            ),
           ),
+          // child: Scaffold(
+          //   appBar: const BrowserAppBar(),
+          //   body: _buildWebViewTabsContent(),
+          // ),
         ));
-  }
-
-  Widget _buildWebViewTabsContent() {
-    var browserModel = controller.browserModel;
-    logd('${browserModel.webViewTabs.length}');
-    if (browserModel.webViewTabs.isEmpty) {
-      return Center(child: const Text('Emplty tab'));
-    }
-    logd(browserModel.getCurrentTabIndex());
-    logd(browserModel.webViewTabs.length);
-    var stackChildren = <Widget>[
-      IndexedStack(
-        index: browserModel.getCurrentTabIndex(),
-        children: browserModel.webViewTabs.map((webViewTab) {
-          var isCurrentTab = webViewTab.webViewModel.tabIndex == browserModel.getCurrentTabIndex();
-
-          if (isCurrentTab) {
-            Future.delayed(const Duration(milliseconds: 100), () {
-              webViewTabStateKey.currentState?.onShowTab();
-            });
-          } else {
-            webViewTabStateKey.currentState?.onHideTab();
-          }
-
-          return webViewTab;
-        }).toList(),
-      ),
-      _createProgressIndicator()
-    ];
-
-    return Stack(
-      children: stackChildren,
-    );
   }
 
   Widget _createProgressIndicator() {

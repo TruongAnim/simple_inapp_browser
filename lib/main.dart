@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:simple_inap_browser/simple_browser/simple_browser_binding.dart';
 import 'package:simple_inap_browser/simple_browser/simple_browser_page.dart';
@@ -13,20 +14,33 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return GetMaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
-      getPages: [
-        GetPage(
-          name: '/browser',
-          page: () => const SimpleBrowserPage(),
-          binding: SimpleBrowserBinding(),
-        ),
-      ],
+    return ScreenUtilInit(
+      minTextAdapt: true,
+      splitScreenMode: true,
+      designSize: const Size(375, 812),
+      useInheritedMediaQuery: true,
+      builder: (context, index) {
+        return GestureDetector(
+          onTap: () {
+            FocusManager.instance.primaryFocus?.unfocus();
+          },
+          child: GetMaterialApp(
+            title: 'Flutter Demo',
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+            ),
+            home: const MyHomePage(title: 'Flutter Demo Home Page'),
+            getPages: [
+              GetPage(
+                name: '/browser',
+                page: () => const SimpleBrowserPage(),
+                binding: SimpleBrowserBinding(),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 }

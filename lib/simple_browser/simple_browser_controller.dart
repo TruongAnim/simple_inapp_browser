@@ -32,11 +32,37 @@ const double TAB_VIEWER_TOP_SCALE_BOTTOM_OFFSET = 230.0;
 class SimpleBrowserController extends GetxController {
   late BrowserModel browserModel;
   late WebViewModel currentWebViewModel;
+
+  static const String IS_EMPTY_PAGE = 'IS_EMPTY_PAGE';
+  static const String IS_INIT_PAGE = 'IS_INIT_PAGE';
+  static const String UPDATE_FOOTER = 'UPDATE_FOOTER';
+  static const String SEARCH_BAR = 'SEARCH_BAR';
+  bool isEmptyPage = true;
+  bool isInitPage = true;
+  TextEditingController urlText = TextEditingController();
+  FocusNode focusNode = FocusNode();
+
+  final List<Map<String, String>> websites = [
+    {'name': 'Facebook', 'url': 'https://amazon.com', 'icon': 'assets/features/browser/logo_ic_amazon.png'},
+    {'name': 'Facebook', 'url': 'https://facebook.com', 'icon': 'assets/features/browser/logo_ic_facebook.png'},
+    {'name': 'Facebook', 'url': 'https://gmail.com', 'icon': 'assets/features/browser/logo_ic_gmail.png'},
+    {'name': 'Facebook', 'url': 'https://google.com', 'icon': 'assets/features/browser/logo_ic_google.png'},
+    {'name': 'Facebook', 'url': 'https://instagram.com', 'icon': 'assets/features/browser/logo_ic_insta.png'},
+    {'name': 'Facebook', 'url': 'https://linkin.com', 'icon': 'assets/features/browser/logo_ic_linkin.png'},
+    {'name': 'Facebook', 'url': 'https://tiktok.com', 'icon': 'assets/features/browser/logo_ic_tiktok.png'},
+    {'name': 'Facebook', 'url': 'https://twitter.com', 'icon': 'assets/features/browser/logo_ic_twitter.png'},
+    {'name': 'Facebook', 'url': 'https://yahoo.com', 'icon': 'assets/features/browser/logo_ic_yahoo.png'},
+    {'name': 'Facebook', 'url': 'https://youtube.com', 'icon': 'assets/features/browser/logo_ic_youtube.png'},
+    {'name': 'Facebook', 'url': 'https://telegram.com', 'icon': 'assets/features/browser/logo_ic_telegram.png'},
+    {'name': 'Facebook', 'url': 'https://whatismyip.com', 'icon': 'assets/features/browser/logo_ic_myip.jpg'},
+  ];
   @override
   void onInit() {
     super.onInit();
     setup();
     init();
+    _initSearchBar();
+    print('truong init SimpleBrowserController');
   }
 
   Future<void> setup() async {
@@ -68,5 +94,49 @@ class SimpleBrowserController extends GetxController {
 
   restore() async {
     browserModel.restore();
+  }
+
+  void search() {
+    isEmptyPage = false;
+    isInitPage = true;
+    focusNode.requestFocus();
+    update([IS_EMPTY_PAGE, UPDATE_FOOTER]);
+  }
+
+  void home() {
+    isEmptyPage = true;
+    urlText.clear();
+    update([IS_EMPTY_PAGE, UPDATE_FOOTER]);
+  }
+
+  void backToVpnApp() {
+    Get.back();
+  }
+
+  Future<void> share() async {}
+
+  void backToVpnServer() {}
+
+  void reload() {}
+
+  void viewTabs() {}
+
+  void onUrlSubmit(String value) {
+    isEmptyPage = false;
+    isInitPage = false;
+
+    FocusScope.of(Get.context!).unfocus();
+    update([IS_EMPTY_PAGE, IS_INIT_PAGE, UPDATE_FOOTER]);
+  }
+
+  void _initSearchBar() {
+    focusNode.addListener(() {
+      if (!focusNode.hasFocus && isInitPage) {
+        home();
+      }
+    });
+    urlText.addListener(() {
+      update([SEARCH_BAR]);
+    });
   }
 }

@@ -11,6 +11,8 @@ class WebViewModel {
   String? _title;
   Favicon? _favicon;
   RxDouble _progress = RxDouble(0);
+  final RxBool _canGoBack = RxBool(false);
+  final RxBool _canGoForward = RxBool(false);
   late bool _loaded;
   late bool _isDesktopMode;
   late bool _isIncognitoMode;
@@ -91,13 +93,17 @@ class WebViewModel {
     }
   }
 
+  // progress
   double get progress => _progress.value;
+  set progress(double value) => _progress.value = value;
 
-  set progress(double value) {
-    if (value != _progress.value) {
-      _progress.value = value;
-    }
-  }
+  // can go back
+  bool get canGoBack => _canGoBack.value;
+  set canGoBack(bool value) => _canGoBack.value = value;
+
+  // can go forward
+  bool get canGoForward => _canGoForward.value;
+  set canGoForward(bool value) => _canGoForward.value = value;
 
   bool get loaded => _loaded;
 
