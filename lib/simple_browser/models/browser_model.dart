@@ -65,7 +65,7 @@ class BrowserSettings {
   }
 }
 
-class BrowserModel extends ChangeNotifier {
+class BrowserModel {
   final List<FavoriteModel> _favorites = [];
   final List<WebViewTab> _webViewTabs = [];
   final Map<String, WebArchiveModel> _webArchives = {};
@@ -80,7 +80,6 @@ class BrowserModel extends ChangeNotifier {
   set showTabScroller(bool value) {
     if (value != _showTabScroller) {
       _showTabScroller = value;
-      notifyListeners();
     }
   }
 
@@ -100,8 +99,6 @@ class BrowserModel extends ChangeNotifier {
     webViewTab.webViewModel.tabIndex = _currentTabIndex;
 
     _currentWebViewModel.updateWithValue(webViewTab.webViewModel);
-
-    notifyListeners();
   }
 
   void addTabs(List<WebViewTab> webViewTabs) {
@@ -113,8 +110,6 @@ class BrowserModel extends ChangeNotifier {
     if (_currentTabIndex >= 0) {
       _currentWebViewModel.updateWithValue(webViewTabs.last.webViewModel);
     }
-
-    notifyListeners();
   }
 
   void closeTab(int index) {
@@ -130,16 +125,12 @@ class BrowserModel extends ChangeNotifier {
     } else {
       _currentWebViewModel.updateWithValue(WebViewModel());
     }
-
-    notifyListeners();
   }
 
   void showTab(int index) {
     if (_currentTabIndex != index) {
       _currentTabIndex = index;
       _currentWebViewModel.updateWithValue(_webViewTabs[_currentTabIndex].webViewModel);
-
-      notifyListeners();
     }
   }
 
@@ -147,8 +138,6 @@ class BrowserModel extends ChangeNotifier {
     _webViewTabs.clear();
     _currentTabIndex = -1;
     _currentWebViewModel.updateWithValue(WebViewModel());
-
-    notifyListeners();
   }
 
   int getCurrentTabIndex() {
@@ -166,17 +155,14 @@ class BrowserModel extends ChangeNotifier {
 
   void addFavorite(FavoriteModel favorite) {
     _favorites.add(favorite);
-    notifyListeners();
   }
 
   void addFavorites(List<FavoriteModel> favorites) {
     _favorites.addAll(favorites);
-    notifyListeners();
   }
 
   void clearFavorites() {
     _favorites.clear();
-    notifyListeners();
   }
 
   void removeFavorite(FavoriteModel favorite) {
@@ -184,18 +170,14 @@ class BrowserModel extends ChangeNotifier {
       var favToRemove = _favorites.map((e) => e).toList().firstWhereOrNull((element) => element.url == favorite.url);
       _favorites.remove(favToRemove);
     }
-
-    notifyListeners();
   }
 
   void addWebArchive(String url, WebArchiveModel webArchiveModel) {
     _webArchives.putIfAbsent(url, () => webArchiveModel);
-    notifyListeners();
   }
 
   void addWebArchives(Map<String, WebArchiveModel> webArchives) {
     _webArchives.addAll(webArchives);
-    notifyListeners();
   }
 
   void removeWebArchive(WebArchiveModel webArchive) {
@@ -207,7 +189,6 @@ class BrowserModel extends ChangeNotifier {
       } finally {
         _webArchives.remove(webArchive.url.toString());
       }
-      notifyListeners();
     }
   }
 
@@ -223,8 +204,6 @@ class BrowserModel extends ChangeNotifier {
         }
       }
     });
-
-    notifyListeners();
   }
 
   BrowserSettings getSettings() {
@@ -233,7 +212,6 @@ class BrowserModel extends ChangeNotifier {
 
   void updateSettings(BrowserSettings settings) {
     _settings = settings;
-    notifyListeners();
   }
 
   void setCurrentWebViewModel(WebViewModel webViewModel) {

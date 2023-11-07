@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:simple_inap_browser/simple_browser/models/browser_model.dart';
 
 import '../core/color_resources.dart';
 import '../core/dismention_constants.dart';
 import '../core/images_path.dart';
 import '../core/izi_size_util.dart';
 import '../core/textstyle_constants.dart';
+import '../log_utils.dart';
 import '../simple_browser_controller.dart';
 import 'loading_progress.dart';
 import 'webview_tab.dart';
@@ -16,54 +18,47 @@ class BrowserBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<SimpleBrowserController>(
-      id: SimpleBrowserController.IS_EMPTY_PAGE,
+      id: SimpleBrowserController.UPDATE_BODY,
       builder: (c) {
-        if (c.isEmptyPage) {
-          return const EmptyBody(showSearch: true);
-        } else {
-          return const ContentBody();
-        }
+        return IndexedStack(
+          index: c.isEmptyPage ? 1 : 0,
+          children: [
+            ContentBody(browserModel: c.browserModel),
+            EmptyBody(showSearch: !c.isSearching),
+          ],
+        );
       },
     );
   }
 }
 
 class ContentBody extends StatelessWidget {
-  const ContentBody({super.key});
+  const ContentBody({super.key, required this.browserModel});
+  final BrowserModel browserModel;
 
   @override
   Widget build(BuildContext context) {
-    return GetBuilder<SimpleBrowserController>(
-      id: SimpleBrowserController.IS_INIT_PAGE,
-      builder: (controller) {
-        var browserModel = controller.browserModel;
-        if (controller.isInitPage) {
-          return const EmptyBody(showSearch: false);
-        } else {
-          return Column(children: [
-            Expanded(
-                child: Stack(children: [
-              IndexedStack(
-                index: browserModel.getCurrentTabIndex(),
-                children: browserModel.webViewTabs.map((webViewTab) {
-                  var isCurrentTab = webViewTab.webViewModel.tabIndex == browserModel.getCurrentTabIndex();
+    return Stack(
+      children: [
+        IndexedStack(
+          alignment: Alignment.center,
+          index: browserModel.getCurrentTabIndex(),
+          children: browserModel.webViewTabs.map((webViewTab) {
+            var isCurrentTab = webViewTab.webViewModel.tabIndex == browserModel.getCurrentTabIndex();
 
-                  if (isCurrentTab) {
-                    Future.delayed(const Duration(milliseconds: 100), () {
-                      webViewTabStateKey.currentState?.onShowTab();
-                    });
-                  } else {
-                    webViewTabStateKey.currentState?.onHideTab();
-                  }
+            if (isCurrentTab) {
+              Future.delayed(const Duration(milliseconds: 100), () {
+                webViewTabStateKey.currentState?.onShowTab();
+              });
+            } else {
+              webViewTabStateKey.currentState?.onHideTab();
+            }
 
-                  return webViewTab;
-                }).toList(),
-              ),
-              const LoadingProgress(),
-            ])),
-          ]);
-        }
-      },
+            return webViewTab;
+          }).toList(),
+        ),
+        const LoadingProgress(),
+      ],
     );
   }
 }
@@ -98,7 +93,7 @@ class EmptyBody extends GetView<SimpleBrowserController> {
             ),
           ),
         ],
-        spaceHeight(iziHeight * 0.05),
+        SizedBox(height: iziHeight * 0.05, width: iziWidth),
         Expanded(
           child: SizedBox(
             width: iziWidth * 0.8,

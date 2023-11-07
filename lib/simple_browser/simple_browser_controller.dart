@@ -4,8 +4,10 @@ import 'package:flutter_downloader/flutter_downloader.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:simple_inap_browser/simple_browser/models/browser_model.dart';
 
+import 'components/util.dart';
 import 'components/webview_tab.dart';
 import 'log_utils.dart';
 import 'models/webview_model.dart';
@@ -30,15 +32,18 @@ const double TAB_VIEWER_TOP_SCALE_TOP_OFFSET = 250.0;
 const double TAB_VIEWER_TOP_SCALE_BOTTOM_OFFSET = 230.0;
 
 class SimpleBrowserController extends GetxController {
+  static const String EMPTY_URI = 'about:blank';
+  static const String UPDATE_BODY = 'UPDATE_BODY';
+  static const String UPDATE_FOOTER = 'UPDATE_FOOTER';
+  static const String UPDATE_APP_BAR = 'UPDATE_APP_BAR';
+  static const String UPDATE_SEARCH = 'UPDATE_SEARCH';
+
   late BrowserModel browserModel;
   late WebViewModel currentWebViewModel;
 
-  static const String IS_EMPTY_PAGE = 'IS_EMPTY_PAGE';
-  static const String IS_INIT_PAGE = 'IS_INIT_PAGE';
-  static const String UPDATE_FOOTER = 'UPDATE_FOOTER';
-  static const String SEARCH_BAR = 'SEARCH_BAR';
-  bool isEmptyPage = true;
-  bool isInitPage = true;
+  bool get isEmptyPage => currentWebViewModel.url == null || currentWebViewModel.url?.rawValue == EMPTY_URI;
+  bool get isSearching => false;
+
   TextEditingController urlText = TextEditingController();
   FocusNode focusNode = FocusNode();
 
@@ -62,7 +67,6 @@ class SimpleBrowserController extends GetxController {
     setup();
     init();
     _initSearchBar();
-    print('truong init SimpleBrowserController');
   }
 
   Future<void> setup() async {
@@ -82,61 +86,122 @@ class SimpleBrowserController extends GetxController {
 
   Future<void> init() async {
     browserModel = BrowserModel();
-
     currentWebViewModel = WebViewModel();
     browserModel.setCurrentWebViewModel(currentWebViewModel);
-    logd('add tab');
     browserModel.addTab(WebViewTab(
       key: GlobalKey(),
-      webViewModel: WebViewModel(url: WebUri('https://google.com')),
+      webViewModel: WebViewModel(),
     ));
+  }
+
+  void _initSearchBar() {
+    // focusNode.addListener(() {
+    //   if (!focusNode.hasFocus && isInitPage) {
+    //     home();
+    //   }
+    // });
+    // urlText.addListener(() {
+    //   update([SEARCH_BAR]);
+    // });
+  }
+
+  void onUrlSubmit(String newUrl) {
+    logd('url submit: $newUrl');
+    FocusScope.of(Get.context!).unfocus();
+    var url = WebUri(newUrl.trim());
+    if (!url.scheme.startsWith("http") && !Util.isLocalizedContent(url)) {
+      url = WebUri(browserModel.getSettings().searchEngine.searchUrl + newUrl);
+    }
+
+    if (currentWebViewModel.webViewController != null) {
+      currentWebViewModel.url = url;
+      currentWebViewModel.webViewController?.loadUrl(urlRequest: URLRequest(url: url));
+      update([UPDATE_BODY, UPDATE_APP_BAR]);
+    }
   }
 
   restore() async {
     browserModel.restore();
   }
 
-  void search() {
-    isEmptyPage = false;
-    isInitPage = true;
-    focusNode.requestFocus();
-    update([IS_EMPTY_PAGE, UPDATE_FOOTER]);
-  }
+  void search() {}
 
   void home() {
-    isEmptyPage = true;
-    urlText.clear();
-    update([IS_EMPTY_PAGE, UPDATE_FOOTER]);
+    if (isEmptyPage) {
+      search();
+    } else {
+      currentWebViewModel.webViewController?.loadUrl(urlRequest: URLRequest(url: WebUri(EMPTY_URI)));
+      delayCallback(() {
+        currentWebViewModel.webViewController?.clearHistory();
+        onUpdateVisitedHistory();
+      }, mili: 500);
+    }
   }
 
   void backToVpnApp() {
     Get.back();
   }
 
-  Future<void> share() async {}
+  Future<void> share() async {
+    final String url = currentWebViewModel.url.toString();
+    if (currentWebViewModel.url != null && url != EMPTY_URI) {
+      Share.shareWithResult(url).then((value) {
+        if (value.status == ShareResultStatus.success) {
+          // Show success dialog
+          // Fluttertoast.showToast(msg: 'Chia sẻ thành công');
+        }
+      });
+    }
+  }
 
   void backToVpnServer() {}
 
-  void reload() {}
-
-  void viewTabs() {}
-
-  void onUrlSubmit(String value) {
-    isEmptyPage = false;
-    isInitPage = false;
-
-    FocusScope.of(Get.context!).unfocus();
-    update([IS_EMPTY_PAGE, IS_INIT_PAGE, UPDATE_FOOTER]);
+  void reload() {
+    currentWebViewModel.webViewController?.reload();
   }
 
-  void _initSearchBar() {
-    focusNode.addListener(() {
-      if (!focusNode.hasFocus && isInitPage) {
-        home();
-      }
+  void viewTabs() async {
+    await Get.toNamed('/multi_tabs');
+    logd(currentWebViewModel);
+    update([UPDATE_BODY, UPDATE_FOOTER]);
+  }
+
+  void webBack() {
+    if (currentWebViewModel.canGoBack) {
+      currentWebViewModel.webViewController?.goBack();
+    }
+  }
+
+  void webForward() {
+    if (currentWebViewModel.canGoForward) {
+      currentWebViewModel.webViewController?.goForward();
+    }
+    if (isEmptyPage) {
+      delayUpdate([UPDATE_BODY, UPDATE_APP_BAR]);
+    }
+  }
+
+  void pressBack(bool isPop) async {
+    webBack();
+  }
+
+  void onUpdateVisitedHistory() async {
+    bool canGoBack = await currentWebViewModel.webViewController?.canGoBack() ?? false;
+    bool canGoForward = await currentWebViewModel.webViewController?.canGoForward() ?? false;
+    currentWebViewModel.canGoBack = canGoBack;
+    currentWebViewModel.canGoForward = canGoForward;
+    if (isEmptyPage) {
+      update([UPDATE_BODY, UPDATE_APP_BAR]);
+    }
+  }
+
+  void delayUpdate(List<String> ids, {int mili = 100}) {
+    Future.delayed(Duration(milliseconds: mili), () {
+      update(ids);
     });
-    urlText.addListener(() {
-      update([SEARCH_BAR]);
-    });
+  }
+
+  void delayCallback(VoidCallback callback, {int mili = 100}) {
+    Future.delayed(Duration(milliseconds: mili), callback);
   }
 }

@@ -11,7 +11,7 @@ class BrowserAppBar extends GetView<SimpleBrowserController> {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<SimpleBrowserController>(
-      id: SimpleBrowserController.IS_EMPTY_PAGE,
+      id: SimpleBrowserController.UPDATE_APP_BAR,
       builder: (c) {
         if (c.isEmptyPage) {
           return const EmptyAppBar();
@@ -52,7 +52,7 @@ class SearchAppBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GetBuilder<SimpleBrowserController>(
-      id: SimpleBrowserController.SEARCH_BAR,
+      id: SimpleBrowserController.UPDATE_SEARCH,
       builder: (controller) => Container(
         color: Colors.white24,
         padding: const EdgeInsets.symmetric(

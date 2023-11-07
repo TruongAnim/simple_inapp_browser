@@ -5,9 +5,11 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 
+import '../log_utils.dart';
+
 class WebViewModel {
   int? _tabIndex;
-  WebUri? _url;
+  final Rx<WebUri?> _url = Rx(null);
   String? _title;
   Favicon? _favicon;
   RxDouble _progress = RxDouble(0);
@@ -48,7 +50,7 @@ class WebViewModel {
       this.findInteractionController,
       this.needsToCompleteInitialLoad = true}) {
     _tabIndex = tabIndex;
-    _url = url;
+    _url.value = url;
     _favicon = favicon;
     _progress = RxDouble(0);
     _loaded = loaded;
@@ -69,13 +71,9 @@ class WebViewModel {
     }
   }
 
-  WebUri? get url => _url;
-
-  set url(WebUri? value) {
-    if (value != _url) {
-      _url = value;
-    }
-  }
+  // current url
+  WebUri? get url => _url.value;
+  set url(WebUri? value) => _url.value = value;
 
   String? get title => _title;
 

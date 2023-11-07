@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
+import 'package:simple_inap_browser/simple_browser/multi_tabs/multi_tabs_binding.dart';
+import 'package:simple_inap_browser/simple_browser/multi_tabs/multi_tabs_page.dart';
 import 'package:simple_inap_browser/simple_browser/simple_browser_binding.dart';
 import 'package:simple_inap_browser/simple_browser/simple_browser_page.dart';
 
@@ -36,6 +38,11 @@ class MyApp extends StatelessWidget {
                 name: '/browser',
                 page: () => const SimpleBrowserPage(),
                 binding: SimpleBrowserBinding(),
+              ),
+              GetPage(
+                name: '/multi_tabs',
+                page: () => const MultiTabsPage(),
+                binding: MultiTabsBinding(),
               ),
             ],
           ),

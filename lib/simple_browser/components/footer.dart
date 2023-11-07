@@ -16,12 +16,8 @@ class Footer extends StatelessWidget {
       id: SimpleBrowserController.UPDATE_FOOTER,
       builder: (controller) {
         if (Get.find<SimpleBrowserController>().focusNode.hasFocus) {
-          print('truong fix hass forcus');
           return Container();
         }
-        print('truong not forcus');
-        final bool canBack = controller.currentWebViewModel.canGoBack;
-        final bool canForward = controller.currentWebViewModel.canGoForward;
         final int tabCount = controller.browserModel.webViewTabs.length;
         final SimpleBrowserController browserController = Get.find<SimpleBrowserController>();
         return Container(
@@ -30,34 +26,38 @@ class Footer extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               IconButton(
-                onPressed: () {
-                  if (canBack) {}
-                },
-                icon: Icon(
-                  Icons.arrow_back_ios_rounded,
-                  color: canBack ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
+                onPressed: controller.webBack,
+                icon: Obx(
+                  () {
+                    bool canGoBack = controller.currentWebViewModel.canGoBack;
+                    return Icon(
+                      Icons.arrow_back_ios_rounded,
+                      color: canGoBack ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
+                    );
+                  },
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  if (canForward) {}
-                },
-                icon: Icon(
-                  Icons.arrow_forward_ios_rounded,
-                  color: canForward ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
+                onPressed: controller.webForward,
+                icon: Obx(
+                  () {
+                    bool canGoForward = controller.currentWebViewModel.canGoForward;
+                    return Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      color: canGoForward ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
+                    );
+                  },
                 ),
               ),
               IconButton(
-                onPressed: () {
-                  if (browserController.isEmptyPage) {
-                    browserController.search();
-                  } else {
-                    browserController.home();
-                  }
-                },
-                icon: Icon(
-                  browserController.isEmptyPage ? Icons.search : Icons.home,
-                  color: ColorResources.WHITE,
+                onPressed: browserController.home,
+                icon: Obx(
+                  () {
+                    return Icon(
+                      browserController.isEmptyPage ? Icons.search : Icons.home,
+                      color: ColorResources.WHITE,
+                    );
+                  },
                 ),
               ),
               IconButton(

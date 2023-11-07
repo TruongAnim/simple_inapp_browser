@@ -26,6 +26,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
   InAppWebViewController? _webViewController;
   PullToRefreshController? _pullToRefreshController;
   FindInteractionController? _findInteractionController;
+  SimpleBrowserController browserController = Get.find<SimpleBrowserController>();
   bool _isWindowClosed = false;
 
   final TextEditingController _httpAuthUsernameController = TextEditingController();
@@ -187,6 +188,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         } else if (widget.webViewModel.needsToCompleteInitialLoad) {
           controller.stopLoading();
         }
+        logd('onLoadStart');
       },
       onLoadStop: (controller, url) async {
         _pullToRefreshController?.endRefreshing();
@@ -236,6 +238,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
               );
           widget.webViewModel.screenshot = await screenshotData;
         }
+        logd('onLoadStop');
       },
       onProgressChanged: (controller, progress) {
         if (progress == 100) {
@@ -247,6 +250,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         if (isCurrentTab(currentWebViewModel)) {
           currentWebViewModel.updateWithValue(widget.webViewModel);
         }
+        logd('onProgressChanged');
       },
       onUpdateVisitedHistory: (controller, url, androidIsReload) async {
         widget.webViewModel.url = url;
@@ -255,6 +259,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         if (isCurrentTab(currentWebViewModel)) {
           currentWebViewModel.updateWithValue(widget.webViewModel);
         }
+        browserController.onUpdateVisitedHistory();
       },
       onLongPressHitTestResult: (inappController, hitTestResult) async {
         logd('onLongPressHitTestResult');
@@ -373,9 +378,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
 
         var errorUrl = request.url;
 
-        _webViewController?.loadData(
-            data:
-                """
+        _webViewController?.loadData(data: """
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -404,9 +407,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
       <p>${error.description}</p>
     </div>
 </body>
-    """,
-            baseUrl: errorUrl,
-            historyUrl: errorUrl);
+    """, baseUrl: errorUrl, historyUrl: errorUrl);
 
         widget.webViewModel.url = errorUrl;
         widget.webViewModel.isSecure = false;
