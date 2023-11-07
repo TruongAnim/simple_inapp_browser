@@ -15,9 +15,6 @@ class Footer extends StatelessWidget {
     return GetBuilder<SimpleBrowserController>(
       id: SimpleBrowserController.UPDATE_FOOTER,
       builder: (controller) {
-        if (Get.find<SimpleBrowserController>().focusNode.hasFocus) {
-          return Container();
-        }
         final int tabCount = controller.browserModel.webViewTabs.length;
         final SimpleBrowserController browserController = Get.find<SimpleBrowserController>();
         return Container(
@@ -25,28 +22,35 @@ class Footer extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
-              IconButton(
-                onPressed: controller.webBack,
-                icon: Obx(
-                  () {
-                    bool canGoBack = controller.currentWebViewModel.canGoBack;
-                    return Icon(
-                      Icons.arrow_back_ios_rounded,
-                      color: canGoBack ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
-                    );
-                  },
-                ),
-              ),
-              IconButton(
-                onPressed: controller.webForward,
-                icon: Obx(
-                  () {
-                    bool canGoForward = controller.currentWebViewModel.canGoForward;
-                    return Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      color: canGoForward ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
-                    );
-                  },
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      onPressed: controller.webBack,
+                      icon: Obx(
+                        () {
+                          bool canGoBack = controller.currentWebViewModel.canGoBack;
+                          return Icon(
+                            Icons.arrow_back_ios_rounded,
+                            color: canGoBack ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
+                          );
+                        },
+                      ),
+                    ),
+                    IconButton(
+                      onPressed: controller.webForward,
+                      icon: Obx(
+                        () {
+                          bool canGoForward = controller.currentWebViewModel.canGoForward;
+                          return Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            color: canGoForward ? ColorResources.WHITE : ColorResources.browser_footer_inactive,
+                          );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
               IconButton(
@@ -60,26 +64,32 @@ class Footer extends StatelessWidget {
                   },
                 ),
               ),
-              IconButton(
-                onPressed: () {
-                  browserController.viewTabs();
-                },
-                icon: Container(
-                  height: iziWidth * 0.06,
-                  width: iziWidth * 0.06,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(3),
-                    border: Border.all(width: 2, color: ColorResources.browser_footer_active),
-                  ),
-                  child: Text(
-                    tabCount.toString(),
-                    style: TextStyles.defaultStyle.setColor(ColorResources.browser_footer_active),
-                  ),
+              Expanded(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    IconButton(
+                      onPressed: () {
+                        browserController.viewTabs();
+                      },
+                      icon: Container(
+                        height: iziWidth * 0.06,
+                        width: iziWidth * 0.06,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(3),
+                          border: Border.all(width: 2, color: ColorResources.browser_footer_active),
+                        ),
+                        child: Text(
+                          tabCount.toString(),
+                          style: TextStyles.defaultStyle.setColor(ColorResources.browser_footer_active),
+                        ),
+                      ),
+                    ),
+                    const PopupMenuWidget(),
+                  ],
                 ),
-              ),
-              const PopupMenuWidget(),
-              spaceWidth(kDefaultPadding),
+              )
             ],
           ),
         );

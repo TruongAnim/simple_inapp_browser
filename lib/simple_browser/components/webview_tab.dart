@@ -188,7 +188,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         } else if (widget.webViewModel.needsToCompleteInitialLoad) {
           controller.stopLoading();
         }
-        logd('onLoadStart');
+        browserController.onLoadStart();
       },
       onLoadStop: (controller, url) async {
         _pullToRefreshController?.endRefreshing();
@@ -422,6 +422,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         if (isCurrentTab(currentWebViewModel)) {
           currentWebViewModel.updateWithValue(widget.webViewModel);
         }
+        browserController.onTitleChanged();
       },
       onCreateWindow: (controller, createWindowRequest) async {
         var webViewTab = WebViewTab(

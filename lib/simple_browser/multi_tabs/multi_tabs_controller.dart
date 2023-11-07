@@ -28,6 +28,8 @@ class MultiTabsController extends GetxController {
         webViewModel: WebViewModel(url: WebUri(SimpleBrowserController.EMPTY_URI)),
       ),
     );
+    pageController.animateToPage(browserModel.webViewTabs.length - 1,
+        duration: const Duration(milliseconds: 500), curve: Curves.easeIn);
     update([UPDATE_TABS]);
   }
 

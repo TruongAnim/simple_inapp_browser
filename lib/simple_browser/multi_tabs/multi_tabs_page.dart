@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:simple_inap_browser/simple_browser/core/color_resources.dart';
 import 'package:simple_inap_browser/simple_browser/core/izi_size_util.dart';
 import 'package:simple_inap_browser/simple_browser/multi_tabs/widgets/tab_header.dart';
 
@@ -54,16 +55,15 @@ class MultiTabsPage extends StatelessWidget {
                           onTap: () {
                             controller.onTabSelect(index);
                           },
-                          child: Container(
+                          child: SizedBox(
                             height: iziHeight * 0.7,
                             width: iziWidth * 0.75,
-                            color: Colors.blue.withOpacity((index + 1) * 0.2),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: <Widget>[
                                 Material(
                                   color: isCurrentTab
-                                      ? Colors.blue
+                                      ? ColorResources.PRIMARY_1
                                       : (webViewTab.webViewModel.isIncognitoMode ? Colors.black : Colors.white),
                                   child: TabHeader(
                                     faviconUrl: faviconUrl,

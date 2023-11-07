@@ -13,7 +13,7 @@ class SimpleBrowserPage extends GetView<SimpleBrowserController> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: true,
+      canPop: controller.canPop(),
       onPopInvoked: controller.pressBack,
       child: const Scaffold(
         backgroundColor: ColorResources.browser_bg,

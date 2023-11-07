@@ -14,22 +14,6 @@ import 'models/webview_model.dart';
 
 // ignore: non_constant_identifier_names
 late String WEB_ARCHIVE_DIR;
-// ignore: non_constant_identifier_names
-late double TAB_VIEWER_BOTTOM_OFFSET_1;
-// ignore: non_constant_identifier_names
-late double TAB_VIEWER_BOTTOM_OFFSET_2;
-// ignore: non_constant_identifier_names
-late double TAB_VIEWER_BOTTOM_OFFSET_3;
-// ignore: constant_identifier_names
-const double TAB_VIEWER_TOP_OFFSET_1 = 0.0;
-// ignore: constant_identifier_names
-const double TAB_VIEWER_TOP_OFFSET_2 = 10.0;
-// ignore: constant_identifier_names
-const double TAB_VIEWER_TOP_OFFSET_3 = 20.0;
-// ignore: constant_identifier_names
-const double TAB_VIEWER_TOP_SCALE_TOP_OFFSET = 250.0;
-// ignore: constant_identifier_names
-const double TAB_VIEWER_TOP_SCALE_BOTTOM_OFFSET = 230.0;
 
 class SimpleBrowserController extends GetxController {
   static const String EMPTY_URI = 'about:blank';
@@ -41,8 +25,8 @@ class SimpleBrowserController extends GetxController {
   late BrowserModel browserModel;
   late WebViewModel currentWebViewModel;
 
+  bool isSearching = false;
   bool get isEmptyPage => currentWebViewModel.url == null || currentWebViewModel.url?.rawValue == EMPTY_URI;
-  bool get isSearching => false;
 
   TextEditingController urlText = TextEditingController();
   FocusNode focusNode = FocusNode();
@@ -73,10 +57,6 @@ class SimpleBrowserController extends GetxController {
     WEB_ARCHIVE_DIR = '/data/user/0/com.example.simple_inap_browser/files';
     // (await getApplicationSupportDirectory()).path;
 
-    TAB_VIEWER_BOTTOM_OFFSET_1 = 130.0;
-    TAB_VIEWER_BOTTOM_OFFSET_2 = 140.0;
-    TAB_VIEWER_BOTTOM_OFFSET_3 = 150.0;
-
     // await FlutterDownloader.initialize(debug: kDebugMode);
 
     // await Permission.camera.request();
@@ -100,13 +80,16 @@ class SimpleBrowserController extends GetxController {
     //     home();
     //   }
     // });
-    // urlText.addListener(() {
-    //   update([SEARCH_BAR]);
-    // });
+    urlText.addListener(() {
+      update([UPDATE_SEARCH]);
+    });
   }
 
   void onUrlSubmit(String newUrl) {
     logd('url submit: $newUrl');
+    if (newUrl.isEmpty) {
+      return;
+    }
     FocusScope.of(Get.context!).unfocus();
     var url = WebUri(newUrl.trim());
     if (!url.scheme.startsWith("http") && !Util.isLocalizedContent(url)) {
@@ -116,7 +99,6 @@ class SimpleBrowserController extends GetxController {
     if (currentWebViewModel.webViewController != null) {
       currentWebViewModel.url = url;
       currentWebViewModel.webViewController?.loadUrl(urlRequest: URLRequest(url: url));
-      update([UPDATE_BODY, UPDATE_APP_BAR]);
     }
   }
 
@@ -124,7 +106,11 @@ class SimpleBrowserController extends GetxController {
     browserModel.restore();
   }
 
-  void search() {}
+  void search() {
+    isSearching = true;
+    focusNode.requestFocus();
+    update([UPDATE_BODY, UPDATE_APP_BAR]);
+  }
 
   void home() {
     if (isEmptyPage) {
@@ -163,7 +149,8 @@ class SimpleBrowserController extends GetxController {
   void viewTabs() async {
     await Get.toNamed('/multi_tabs');
     logd(currentWebViewModel);
-    update([UPDATE_BODY, UPDATE_FOOTER]);
+    update([UPDATE_BODY, UPDATE_FOOTER, UPDATE_APP_BAR]);
+    updateSearch();
   }
 
   void webBack() {
@@ -182,7 +169,16 @@ class SimpleBrowserController extends GetxController {
   }
 
   void pressBack(bool isPop) async {
+    if (isSearching) {
+      isSearching = false;
+      update([UPDATE_BODY, UPDATE_APP_BAR]);
+      return;
+    }
     webBack();
+  }
+
+  bool canPop() {
+    return false;
   }
 
   void onUpdateVisitedHistory() async {
@@ -203,5 +199,25 @@ class SimpleBrowserController extends GetxController {
 
   void delayCallback(VoidCallback callback, {int mili = 100}) {
     Future.delayed(Duration(milliseconds: mili), callback);
+  }
+
+  void updateSearch() {
+    String url = currentWebViewModel.url.toString();
+    if (url == EMPTY_URI) {
+      url = '';
+    }
+    logd('update search $url');
+    urlText.text = url;
+    update([UPDATE_SEARCH]);
+  }
+
+  void onTitleChanged() {
+    updateSearch();
+    update([UPDATE_BODY, UPDATE_APP_BAR]);
+  }
+
+  void onLoadStart() {
+    updateSearch();
+    update([UPDATE_BODY, UPDATE_APP_BAR]);
   }
 }

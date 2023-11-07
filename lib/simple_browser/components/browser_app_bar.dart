@@ -13,10 +13,10 @@ class BrowserAppBar extends GetView<SimpleBrowserController> {
     return GetBuilder<SimpleBrowserController>(
       id: SimpleBrowserController.UPDATE_APP_BAR,
       builder: (c) {
-        if (c.isEmptyPage) {
-          return const EmptyAppBar();
-        } else {
+        if (c.isSearching || !c.isEmptyPage) {
           return const SearchAppBar();
+        } else {
+          return const EmptyAppBar();
         }
       },
     );
@@ -57,7 +57,7 @@ class SearchAppBar extends StatelessWidget {
         color: Colors.white24,
         padding: const EdgeInsets.symmetric(
           horizontal: kDefaultPadding,
-          vertical: kTopPadding,
+          vertical: kMinPadding,
         ),
         child: TextField(
           focusNode: controller.focusNode,
@@ -68,7 +68,7 @@ class SearchAppBar extends StatelessWidget {
           decoration: InputDecoration(
             hintText: 'Search or input URL',
             hintStyle: const TextStyle(color: ColorResources.GREY),
-            contentPadding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+            contentPadding: const EdgeInsets.symmetric(vertical: 5, horizontal: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(kTopPadding),
               borderSide: BorderSide.none,
