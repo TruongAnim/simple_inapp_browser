@@ -102,7 +102,7 @@ class BrowserModel {
   }
 
   void addTabs(List<WebViewTab> webViewTabs) {
-    for (var webViewTab in webViewTabs) {
+    for (final webViewTab in webViewTabs) {
       _webViewTabs.add(webViewTab);
       webViewTab.webViewModel.tabIndex = _webViewTabs.length - 1;
     }
@@ -167,7 +167,7 @@ class BrowserModel {
 
   void removeFavorite(FavoriteModel favorite) {
     if (!_favorites.remove(favorite)) {
-      var favToRemove = _favorites.map((e) => e).toList().firstWhereOrNull((element) => element.url == favorite.url);
+      final favToRemove = _favorites.map((e) => e).toList().firstWhereOrNull((element) => element.url == favorite.url);
       _favorites.remove(favToRemove);
     }
   }
@@ -181,7 +181,7 @@ class BrowserModel {
   }
 
   void removeWebArchive(WebArchiveModel webArchive) {
-    var path = webArchive.path;
+    final path = webArchive.path;
     if (path != null) {
       final webArchiveFile = File(path);
       try {
@@ -194,7 +194,7 @@ class BrowserModel {
 
   void clearWebArchives() {
     _webArchives.forEach((key, webArchive) {
-      var path = webArchive.path;
+      final path = webArchive.path;
       if (path != null) {
         final webArchiveFile = File(path);
         try {
@@ -235,15 +235,15 @@ class BrowserModel {
   }
 
   Future<void> flush() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setString("browser", json.encode(toJson()));
   }
 
   Future<void> restore() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+    final SharedPreferences prefs = await SharedPreferences.getInstance();
     Map<String, dynamic> browserData;
     try {
-      String? source = prefs.getString("browser");
+      final String? source = prefs.getString("browser");
       if (source != null) {
         browserData = await json.decode(source);
 
@@ -251,19 +251,20 @@ class BrowserModel {
         closeAllTabs();
         clearWebArchives();
 
-        List<Map<String, dynamic>> favoritesList = browserData["favorites"]?.cast<Map<String, dynamic>>() ?? [];
-        List<FavoriteModel> favorites = favoritesList.map((e) => FavoriteModel.fromMap(e)!).toList();
+        final List<Map<String, dynamic>> favoritesList = browserData["favorites"]?.cast<Map<String, dynamic>>() ?? [];
+        final List<FavoriteModel> favorites = favoritesList.map((e) => FavoriteModel.fromMap(e)!).toList();
 
-        Map<String, dynamic> webArchivesMap = browserData["webArchives"]?.cast<String, dynamic>() ?? {};
-        Map<String, WebArchiveModel> webArchives =
+        final Map<String, dynamic> webArchivesMap = browserData["webArchives"]?.cast<String, dynamic>() ?? {};
+        final Map<String, WebArchiveModel> webArchives =
             webArchivesMap.map((key, value) => MapEntry(key, WebArchiveModel.fromMap(value?.cast<String, dynamic>())!));
 
-        BrowserSettings settings =
+        final BrowserSettings settings =
             BrowserSettings.fromMap(browserData["settings"]?.cast<String, dynamic>()) ?? BrowserSettings();
-        List<Map<String, dynamic>> webViewTabList = browserData["webViewTabs"]?.cast<Map<String, dynamic>>() ?? [];
-        List<WebViewTab> webViewTabs = webViewTabList
+        final List<Map<String, dynamic>> webViewTabList =
+            browserData["webViewTabs"]?.cast<Map<String, dynamic>>() ?? [];
+        final List<WebViewTab> webViewTabs = webViewTabList
             .map((e) => WebViewTab(
-                  key: GlobalKey(),
+                  key: GlobalKey<WebViewTabState>(),
                   webViewModel: WebViewModel.fromMap(e)!,
                 ))
             .toList();

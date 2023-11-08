@@ -26,6 +26,7 @@ class SimpleBrowserController extends GetxController {
   late WebViewModel currentWebViewModel;
 
   bool isSearching = false;
+  RxBool isLoading = RxBool(true);
   bool get isEmptyPage => currentWebViewModel.url == null || currentWebViewModel.url?.rawValue == EMPTY_URI;
 
   TextEditingController urlText = TextEditingController();
@@ -48,30 +49,29 @@ class SimpleBrowserController extends GetxController {
   @override
   void onInit() {
     super.onInit();
-    setup();
-    init();
+    _setup();
     _initSearchBar();
   }
 
-  Future<void> setup() async {
-    WEB_ARCHIVE_DIR = '/data/user/0/com.example.simple_inap_browser/files';
-    // (await getApplicationSupportDirectory()).path;
-
-    // await FlutterDownloader.initialize(debug: kDebugMode);
-
-    // await Permission.camera.request();
-    // await Permission.microphone.request();
-    // await Permission.storage.request();
-  }
-
-  Future<void> init() async {
+  Future<void> _setup() async {
+    WEB_ARCHIVE_DIR = (await getApplicationSupportDirectory()).path;
     browserModel = BrowserModel();
     currentWebViewModel = WebViewModel();
     browserModel.setCurrentWebViewModel(currentWebViewModel);
-    browserModel.addTab(WebViewTab(
-      key: GlobalKey(),
-      webViewModel: WebViewModel(),
-    ));
+    await restore();
+    if (browserModel.webViewTabs.isNotEmpty) {
+    } else {
+      browserModel.addTab(WebViewTab(
+        key: GlobalKey<WebViewTabState>(),
+        webViewModel: WebViewModel(),
+      ));
+    }
+    // await FlutterDownloader.initialize(debug: kDebugMode);
+
+    isLoading.value = false;
+    // await Permission.camera.request();
+    // await Permission.microphone.request();
+    // await Permission.storage.request();
   }
 
   void _initSearchBar() {
@@ -99,11 +99,12 @@ class SimpleBrowserController extends GetxController {
     if (currentWebViewModel.webViewController != null) {
       currentWebViewModel.url = url;
       currentWebViewModel.webViewController?.loadUrl(urlRequest: URLRequest(url: url));
+      delayUpdate([UPDATE_BODY, UPDATE_APP_BAR]);
     }
   }
 
-  restore() async {
-    browserModel.restore();
+  Future<void> restore() async {
+    await browserModel.restore();
   }
 
   void search() {
@@ -124,8 +125,8 @@ class SimpleBrowserController extends GetxController {
     }
   }
 
-  void backToVpnApp() {
-    Get.back();
+  Future<void> backToVpnApp() async {
+    backToApp();
   }
 
   Future<void> share() async {
@@ -146,7 +147,7 @@ class SimpleBrowserController extends GetxController {
     currentWebViewModel.webViewController?.reload();
   }
 
-  void viewTabs() async {
+  Future<void> viewTabs() async {
     await Get.toNamed('/multi_tabs');
     logd(currentWebViewModel);
     update([UPDATE_BODY, UPDATE_FOOTER, UPDATE_APP_BAR]);
@@ -156,6 +157,9 @@ class SimpleBrowserController extends GetxController {
   void webBack() {
     if (currentWebViewModel.canGoBack) {
       currentWebViewModel.webViewController?.goBack();
+    }
+    if (isEmptyPage) {
+      delayUpdate([UPDATE_BODY, UPDATE_APP_BAR]);
     }
   }
 
@@ -168,22 +172,38 @@ class SimpleBrowserController extends GetxController {
     }
   }
 
-  void pressBack(bool isPop) async {
+  Future<void> pressBack(bool isPop) async {
     if (isSearching) {
       isSearching = false;
       update([UPDATE_BODY, UPDATE_APP_BAR]);
       return;
     }
-    webBack();
+    if (await currentWebViewModel.webViewController?.canGoBack() ?? false) {
+      webBack();
+    } else {
+      backToApp();
+    }
   }
 
   bool canPop() {
     return false;
   }
 
-  void onUpdateVisitedHistory() async {
-    bool canGoBack = await currentWebViewModel.webViewController?.canGoBack() ?? false;
-    bool canGoForward = await currentWebViewModel.webViewController?.canGoForward() ?? false;
+  Future<void> backToApp() async {
+    isLoading.value = true;
+    if (browserModel.webViewTabs.isNotEmpty) {
+      logd('save ${browserModel.webViewTabs.length}');
+      await browserModel.save();
+      browserModel.closeAllTabs();
+      update([UPDATE_BODY, UPDATE_FOOTER, UPDATE_APP_BAR]);
+    }
+    await Future.delayed(const Duration(milliseconds: 1000));
+    Get.back();
+  }
+
+  Future<void> onUpdateVisitedHistory() async {
+    final bool canGoBack = await currentWebViewModel.webViewController?.canGoBack() ?? false;
+    final bool canGoForward = await currentWebViewModel.webViewController?.canGoForward() ?? false;
     currentWebViewModel.canGoBack = canGoBack;
     currentWebViewModel.canGoForward = canGoForward;
     if (isEmptyPage) {
@@ -204,6 +224,7 @@ class SimpleBrowserController extends GetxController {
   void updateSearch() {
     String url = currentWebViewModel.url.toString();
     if (url == EMPTY_URI) {
+      logd('url: ${url}');
       url = '';
     }
     logd('update search $url');

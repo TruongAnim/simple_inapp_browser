@@ -15,16 +15,23 @@ class SimpleBrowserPage extends GetView<SimpleBrowserController> {
     return PopScope(
       canPop: controller.canPop(),
       onPopInvoked: controller.pressBack,
-      child: const Scaffold(
+      child: Scaffold(
         backgroundColor: ColorResources.browser_bg,
         resizeToAvoidBottomInset: false,
         body: SafeArea(
-          child: Column(
-            children: [
-              BrowserAppBar(),
-              Expanded(child: BrowserBody()),
-              Footer(),
-            ],
+          child: Obx(
+            () {
+              if (controller.isLoading.isTrue) {
+                return const Center(child: CircularProgressIndicator());
+              }
+              return const Column(
+                children: [
+                  BrowserAppBar(),
+                  Expanded(child: BrowserBody()),
+                  Footer(),
+                ],
+              );
+            },
           ),
         ),
       ),

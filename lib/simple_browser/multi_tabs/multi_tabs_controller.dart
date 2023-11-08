@@ -24,7 +24,7 @@ class MultiTabsController extends GetxController {
     browserModel.showTabScroller = false;
     browserModel.addTab(
       WebViewTab(
-        key: GlobalKey(),
+        key: GlobalKey<WebViewTabState>(),
         webViewModel: WebViewModel(url: WebUri(SimpleBrowserController.EMPTY_URI)),
       ),
     );

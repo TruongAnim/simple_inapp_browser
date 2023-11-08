@@ -5,14 +5,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
 import 'package:get/get.dart';
 
-import '../log_utils.dart';
-
 class WebViewModel {
   int? _tabIndex;
   final Rx<WebUri?> _url = Rx(null);
   String? _title;
   Favicon? _favicon;
-  RxDouble _progress = RxDouble(0);
+  final RxDouble _progress = RxDouble(0);
   final RxBool _canGoBack = RxBool(false);
   final RxBool _canGoForward = RxBool(false);
   late bool _loaded;
@@ -36,6 +34,8 @@ class WebViewModel {
       String? title,
       Favicon? favicon,
       double progress = 0.0,
+      bool canGoBack = false,
+      bool canGoForward = false,
       bool loaded = false,
       bool isDesktopMode = false,
       bool isIncognitoMode = false,
@@ -51,8 +51,11 @@ class WebViewModel {
       this.needsToCompleteInitialLoad = true}) {
     _tabIndex = tabIndex;
     _url.value = url;
+    _title = title;
     _favicon = favicon;
-    _progress = RxDouble(0);
+    _progress.value = progress;
+    _canGoBack.value = canGoBack;
+    _canGoForward.value = canGoForward;
     _loaded = loaded;
     _isDesktopMode = isDesktopMode;
     _isIncognitoMode = isIncognitoMode;
@@ -204,7 +207,6 @@ class WebViewModel {
                     height: map["favicon"]["height"],
                   )
                 : null,
-            progress: map["progress"],
             isDesktopMode: map["isDesktopMode"],
             isIncognitoMode: map["isIncognitoMode"],
             javaScriptConsoleHistory: map["javaScriptConsoleHistory"]?.cast<String>(),
@@ -217,10 +219,9 @@ class WebViewModel {
   Map<String, dynamic> toMap() {
     return {
       "tabIndex": _tabIndex,
-      "url": _url?.toString(),
+      "url": url.toString(),
       "title": _title,
       "favicon": _favicon?.toMap(),
-      "progress": _progress,
       "isDesktopMode": _isDesktopMode,
       "isIncognitoMode": _isIncognitoMode,
       "javaScriptConsoleHistory": _javaScriptConsoleHistory,

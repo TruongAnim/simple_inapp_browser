@@ -11,18 +11,16 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/webview_model.dart';
 import 'util.dart';
 
-final webViewTabStateKey = GlobalKey<_WebViewTabState>();
-
 class WebViewTab extends StatefulWidget {
   const WebViewTab({Key? key, required this.webViewModel}) : super(key: key);
 
   final WebViewModel webViewModel;
 
   @override
-  State<WebViewTab> createState() => _WebViewTabState();
+  State<WebViewTab> createState() => WebViewTabState();
 }
 
-class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
+class WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
   InAppWebViewController? _webViewController;
   PullToRefreshController? _pullToRefreshController;
   FindInteractionController? _findInteractionController;
@@ -55,6 +53,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
 
   @override
   void dispose() {
+    logd('dis pose webview');
     _webViewController = null;
     widget.webViewModel.webViewController = null;
     widget.webViewModel.pullToRefreshController = null;
@@ -116,22 +115,23 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.red,
+      color: Colors.white,
       child: _buildWebView(),
     );
   }
 
   InAppWebView _buildWebView() {
-    SimpleBrowserController controller = Get.find<SimpleBrowserController>();
-    var browserModel = controller.browserModel;
-    var settings = browserModel.getSettings();
-    var currentWebViewModel = controller.currentWebViewModel;
+    final SimpleBrowserController controller = Get.find<SimpleBrowserController>();
+    final browserModel = controller.browserModel;
+    final settings = browserModel.getSettings();
+    final currentWebViewModel = controller.currentWebViewModel;
+    logd('_buildWebView ${currentWebViewModel.url.toString()}');
 
     if (Util.isAndroid()) {
       InAppWebViewController.setWebContentsDebuggingEnabled(settings.debuggingEnabled);
     }
 
-    var initialSettings = widget.webViewModel.settings!;
+    final initialSettings = widget.webViewModel.settings!;
     initialSettings.useOnDownloadStart = true;
     initialSettings.useOnLoadResource = true;
     initialSettings.useShouldOverrideUrlLoading = true;
@@ -175,6 +175,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         if (isCurrentTab(currentWebViewModel)) {
           currentWebViewModel.updateWithValue(widget.webViewModel);
         }
+        logd('_buildWebView 2 ${currentWebViewModel.webViewController}');
       },
       onLoadStart: (controller, url) async {
         widget.webViewModel.isSecure = Util.urlIsSecure(url!);
@@ -197,20 +198,20 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         widget.webViewModel.favicon = null;
         widget.webViewModel.loaded = true;
 
-        var sslCertificateFuture = _webViewController?.getCertificate();
-        var titleFuture = _webViewController?.getTitle();
-        var faviconsFuture = _webViewController?.getFavicons();
+        final sslCertificateFuture = _webViewController?.getCertificate();
+        final titleFuture = _webViewController?.getTitle();
+        final faviconsFuture = _webViewController?.getFavicons();
 
-        var sslCertificate = await sslCertificateFuture;
+        final sslCertificate = await sslCertificateFuture;
         if (sslCertificate == null && !Util.isLocalizedContent(url!)) {
           widget.webViewModel.isSecure = false;
         }
 
         widget.webViewModel.title = await titleFuture;
 
-        List<Favicon>? favicons = await faviconsFuture;
+        final List<Favicon>? favicons = await faviconsFuture;
         if (favicons != null && favicons.isNotEmpty) {
-          for (var fav in favicons) {
+          for (final fav in favicons) {
             if (widget.webViewModel.favicon == null) {
               widget.webViewModel.favicon = fav;
             } else {
@@ -229,7 +230,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
           widget.webViewModel.needsToCompleteInitialLoad = false;
           currentWebViewModel.updateWithValue(widget.webViewModel);
 
-          var screenshotData = _webViewController
+          final screenshotData = _webViewController
               ?.takeScreenshot(
                   screenshotConfiguration: ScreenshotConfiguration(compressFormat: CompressFormat.JPEG, quality: 20))
               .timeout(
@@ -238,7 +239,6 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
               );
           widget.webViewModel.screenshot = await screenshotData;
         }
-        logd('onLoadStop');
       },
       onProgressChanged: (controller, progress) {
         if (progress == 100) {
@@ -250,7 +250,6 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         if (isCurrentTab(currentWebViewModel)) {
           currentWebViewModel.updateWithValue(widget.webViewModel);
         }
-        logd('onProgressChanged');
       },
       onUpdateVisitedHistory: (controller, url, androidIsReload) async {
         widget.webViewModel.url = url;
@@ -262,7 +261,6 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         browserController.onUpdateVisitedHistory();
       },
       onLongPressHitTestResult: (inappController, hitTestResult) async {
-        logd('onLongPressHitTestResult');
         // if (LongPressAlertDialog.hitTestResultSupported.contains(hitTestResult.type)) {
         //   var requestFocusNodeHrefResult = await _webViewController?.requestFocusNodeHref();
 
@@ -281,38 +279,38 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         // }
       },
       onConsoleMessage: (controller, consoleMessage) {
-        Color consoleTextColor = Colors.black;
-        Color consoleBackgroundColor = Colors.transparent;
-        IconData? consoleIconData;
-        Color? consoleIconColor;
-        if (consoleMessage.messageLevel == ConsoleMessageLevel.ERROR) {
-          consoleTextColor = Colors.red;
-          consoleIconData = Icons.report_problem;
-          consoleIconColor = Colors.red;
-        } else if (consoleMessage.messageLevel == ConsoleMessageLevel.TIP) {
-          consoleTextColor = Colors.blue;
-          consoleIconData = Icons.info;
-          consoleIconColor = Colors.blueAccent;
-        } else if (consoleMessage.messageLevel == ConsoleMessageLevel.WARNING) {
-          consoleBackgroundColor = const Color.fromRGBO(255, 251, 227, 1);
-          consoleIconData = Icons.report_problem;
-          consoleIconColor = Colors.orangeAccent;
-        }
+        // Color consoleTextColor = Colors.black;
+        // Color consoleBackgroundColor = Colors.transparent;
+        // IconData? consoleIconData;
+        // Color? consoleIconColor;
+        // if (consoleMessage.messageLevel == ConsoleMessageLevel.ERROR) {
+        //   consoleTextColor = Colors.red;
+        //   consoleIconData = Icons.report_problem;
+        //   consoleIconColor = Colors.red;
+        // } else if (consoleMessage.messageLevel == ConsoleMessageLevel.TIP) {
+        //   consoleTextColor = Colors.blue;
+        //   consoleIconData = Icons.info;
+        //   consoleIconColor = Colors.blueAccent;
+        // } else if (consoleMessage.messageLevel == ConsoleMessageLevel.WARNING) {
+        //   consoleBackgroundColor = const Color.fromRGBO(255, 251, 227, 1);
+        //   consoleIconData = Icons.report_problem;
+        //   consoleIconColor = Colors.orangeAccent;
+        // }
 
-        widget.webViewModel.addJavaScriptConsoleResults(
-          // JavaScriptConsoleResult(
-          //   data: consoleMessage.message,
-          //   textColor: consoleTextColor,
-          //   backgroundColor: consoleBackgroundColor,
-          //   iconData: consoleIconData,
-          //   iconColor: consoleIconColor,
-          // ),
-          const Text('addJavaScriptConsoleResults'),
-        );
+        // widget.webViewModel.addJavaScriptConsoleResults(
+        //   JavaScriptConsoleResult(
+        //     data: consoleMessage.message,
+        //     textColor: consoleTextColor,
+        //     backgroundColor: consoleBackgroundColor,
+        //     iconData: consoleIconData,
+        //     iconColor: consoleIconColor,
+        //   ),
+        //   const Text('addJavaScriptConsoleResults'),
+        // );
 
-        if (isCurrentTab(currentWebViewModel)) {
-          currentWebViewModel.updateWithValue(widget.webViewModel);
-        }
+        // if (isCurrentTab(currentWebViewModel)) {
+        //   currentWebViewModel.updateWithValue(widget.webViewModel);
+        // }
       },
       onLoadResource: (controller, resource) {
         widget.webViewModel.addLoadedResources(resource);
@@ -322,7 +320,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         }
       },
       shouldOverrideUrlLoading: (controller, navigationAction) async {
-        var url = navigationAction.request.url;
+        final url = navigationAction.request.url;
 
         if (url != null && !["http", "https", "file", "chrome", "data", "javascript", "about"].contains(url.scheme)) {
           if (await canLaunchUrl(url)) {
@@ -338,19 +336,17 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         return NavigationActionPolicy.ALLOW;
       },
       onDownloadStartRequest: (controller, url) async {
-        String path = url.url.path;
-        String fileName = path.substring(path.lastIndexOf('/') + 1);
+        final String path = url.url.path;
+        final String fileName = path.substring(path.lastIndexOf('/') + 1);
 
         await FlutterDownloader.enqueue(
           url: url.toString(),
           fileName: fileName,
           savedDir: (await getTemporaryDirectory()).path,
-          showNotification: true,
-          openFileFromNotification: true,
         );
       },
       onReceivedServerTrustAuthRequest: (controller, challenge) async {
-        var sslError = challenge.protectionSpace.sslError;
+        final sslError = challenge.protectionSpace.sslError;
         if (sslError != null && (sslError.code != null)) {
           if (Util.isIOS() && sslError.code == SslErrorType.UNSPECIFIED) {
             return ServerTrustAuthResponse(action: ServerTrustAuthResponseAction.PROCEED);
@@ -359,12 +355,12 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
           if (isCurrentTab(currentWebViewModel)) {
             currentWebViewModel.updateWithValue(widget.webViewModel);
           }
-          return ServerTrustAuthResponse(action: ServerTrustAuthResponseAction.CANCEL);
+          return ServerTrustAuthResponse();
         }
         return ServerTrustAuthResponse(action: ServerTrustAuthResponseAction.PROCEED);
       },
       onReceivedError: (controller, request, error) async {
-        var isForMainFrame = request.isForMainFrame ?? false;
+        final isForMainFrame = request.isForMainFrame ?? false;
         if (!isForMainFrame) {
           return;
         }
@@ -376,7 +372,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
           return;
         }
 
-        var errorUrl = request.url;
+        final errorUrl = request.url;
 
         _webViewController?.loadData(data: """
 <!DOCTYPE html>
@@ -425,8 +421,8 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         browserController.onTitleChanged();
       },
       onCreateWindow: (controller, createWindowRequest) async {
-        var webViewTab = WebViewTab(
-          key: GlobalKey(),
+        final webViewTab = WebViewTab(
+          key: GlobalKey<WebViewTabState>(),
           webViewModel: WebViewModel(url: WebUri("about:blank"), windowId: createWindowRequest.windowId),
         );
 
@@ -447,7 +443,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
         return PermissionResponse(resources: permissionRequest.resources, action: PermissionResponseAction.GRANT);
       },
       onReceivedHttpAuthRequest: (controller, challenge) async {
-        var action = await createHttpAuthDialog(challenge);
+        final action = await createHttpAuthDialog(challenge);
         return HttpAuthResponse(
             username: _httpAuthUsernameController.text.trim(),
             password: _httpAuthPasswordController.text,
@@ -508,7 +504,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
     return action;
   }
 
-  void onShowTab() async {
+  Future<void> onShowTab() async {
     resume();
     if (widget.webViewModel.needsToCompleteInitialLoad) {
       widget.webViewModel.needsToCompleteInitialLoad = false;
@@ -516,7 +512,7 @@ class _WebViewTabState extends State<WebViewTab> with WidgetsBindingObserver {
     }
   }
 
-  void onHideTab() async {
+  Future<void> onHideTab() async {
     pause();
   }
 }

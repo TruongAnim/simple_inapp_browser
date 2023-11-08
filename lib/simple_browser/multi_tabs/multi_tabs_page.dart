@@ -24,7 +24,7 @@ class MultiTabsPage extends StatelessWidget {
                 itemCount: controller.browserModel.webViewTabs.length,
                 itemBuilder: (context, index) {
                   WebViewTab webViewTab = controller.browserModel.webViewTabs[index];
-                  webViewTabStateKey.currentState?.pause();
+                  (webViewTab.key! as GlobalKey<WebViewTabState>).currentState?.pause();
                   var screenshotData = webViewTab.webViewModel.screenshot;
                   Widget screenshotImage = Container(
                     decoration: const BoxDecoration(color: Colors.white),

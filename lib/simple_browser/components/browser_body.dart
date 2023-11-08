@@ -40,6 +40,11 @@ class ContentBody extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
+        Container(
+          width: 100,
+          height: 100,
+          color: Colors.red,
+        ),
         IndexedStack(
           alignment: Alignment.center,
           index: browserModel.getCurrentTabIndex(),
@@ -48,10 +53,10 @@ class ContentBody extends StatelessWidget {
 
             if (isCurrentTab) {
               Future.delayed(const Duration(milliseconds: 100), () {
-                webViewTabStateKey.currentState?.onShowTab();
+                (webViewTab.key! as GlobalKey<WebViewTabState>).currentState?.onShowTab();
               });
             } else {
-              webViewTabStateKey.currentState?.onHideTab();
+              (webViewTab.key! as GlobalKey<WebViewTabState>).currentState?.onHideTab();
             }
 
             return webViewTab;
